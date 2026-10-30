@@ -1,84 +1,201 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Greenhouse IoT Monitoring</title>
-  <!-- Chart.js via CDN -->
-<!-- Tambahkan CDN Socket.IO ini di dalam tag <head> atau sebelum app.js -->
-<script src="/socket.io/socket.io.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="app.js"></script>
-  
+  <meta name="theme-color" content="#f4f8f5">
+  <title>Greenhouse | Smart Monitoring</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <style>
-    * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
-    body { padding: 20px; background-color: #f4f6f9; color: #333; }
-    .container { max-width: 1000px; margin: auto; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
-    .online { background-color: #d4edda; color: #155724; }
-    .offline { background-color: #f8d7da; color: #721c24; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .card-normal { border-left: 6px solid #28a745; }
-    .card-hot { border-left: 6px solid #dc3545; }
-    .card-blue { border-left: 6px solid #17a2b8; }
-    .card h3 { font-size: 14px; color: #666; margin-bottom: 8px; }
-    .card .value { font-size: 28px; font-weight: bold; }
-    .card .time { font-size: 11px; color: #888; margin-top: 5px; }
-    .chart-container, .table-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
-    th { background-color: #f8f9fa; }
-  </style>
+
+  <script>
+    // Terapkan tema tersimpan sebelum halaman ditampilkan
+    const savedTheme = localStorage.getItem("greenhouse-theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  </script>
 </head>
+
 <body>
   <div class="container">
-    <header>
-      <h2>Greenhouse IoT Monitoring</h2>
-      <span id="device-status" class="status-badge offline">Offline</span>
+
+    <!-- Header -->
+    <header class="dashboard-header">
+      <div class="brand">
+        <div class="brand-icon">🌱</div>
+        <div>
+          <h1>Greenhouse<span>Monitor</span></h1>
+          <p>Smart Agriculture Dashboard</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <span id="device-status" class="status-badge offline">
+          Offline
+        </span>
+
+        <button id="theme-toggle" class="theme-toggle"
+                type="button" aria-label="Ganti tema">
+          <span id="theme-icon">🌙</span>
+          <span id="theme-text">Dark Mode</span>
+        </button>
+      </div>
     </header>
 
-    <!-- Kartu Nilai Suhu & Kelembapan -->
-    <div class="cards">
+    <!-- Welcome -->
+    <section class="welcome-section">
+      <div>
+        <p class="eyebrow">OVERVIEW</p>
+        <h2>Dashboard Monitoring</h2>
+        <p class="welcome-description">
+          Pantau kondisi suhu dan kelembapan greenhouse
+          secara real-time.
+        </p>
+      </div>
+
+      <div class="refresh-info">
+        <span class="refresh-dot"></span>
+        Live Monitoring
+      </div>
+    </section>
+
+    <!-- Sensor Cards -->
+    <section class="cards">
+
       <div id="suhu-card" class="card card-normal">
-        <h3>SUHU TERKINI</h3>
-        <div class="value"><span id="val-suhu">--</span> °C</div>
-        <div class="time">Update: <span id="time-suhu">--</span></div>
+        <div class="card-top">
+          <div class="sensor-icon temperature-icon">🌡️</div>
+          <span class="sensor-label">TEMPERATURE</span>
+        </div>
+
+        <h3>Suhu Terkini</h3>
+
+        <div class="value">
+          <span id="val-suhu">--</span>
+          <span class="unit">°C</span>
+        </div>
+
+        <div class="card-bottom">
+          <span class="sensor-indicator">Sensor Suhu</span>
+          <span class="time">
+            Update: <span id="time-suhu">--</span>
+          </span>
+        </div>
       </div>
+
       <div class="card card-blue">
-        <h3>KELEMBAPAN TERKINI</h3>
-        <div class="value"><span id="val-kelembapan">--</span> %</div>
-        <div class="time">Update: <span id="time-kelembapan">--</span></div>
+        <div class="card-top">
+          <div class="sensor-icon humidity-icon">💧</div>
+          <span class="sensor-label">HUMIDITY</span>
+        </div>
+
+        <h3>Kelembapan Terkini</h3>
+
+        <div class="value">
+          <span id="val-kelembapan">--</span>
+          <span class="unit">%</span>
+        </div>
+
+        <div class="card-bottom">
+          <span class="sensor-indicator">Sensor Kelembapan</span>
+          <span class="time">
+            Update: <span id="time-kelembapan">--</span>
+          </span>
+        </div>
       </div>
-    </div>
 
-    <!-- Grafik Garis -->
-    <div class="chart-container">
-      <h3>Grafik Riwayat Suhu & Kelembapan (20 Data Terakhir)</h3>
-      <canvas id="sensorChart" height="100"></canvas>
-    </div>
+    </section>
 
-    <!-- Tabel Riwayat -->
-    <div class="table-container">
-      <h3>Tabel 10 Data Terakhir</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>ID Perangkat</th>
-            <th>Suhu (°C)</th>
-            <th>Kelembapan (%)</th>
-            <th>Waktu</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <tr><td colspan="4" style="text-align: center;">Memuat data...</td></tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- Grafik -->
+    <section class="chart-container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">ANALYTICS</p>
+          <h3>Grafik Monitoring</h3>
+          <p>Riwayat suhu dan kelembapan (20 data terakhir)</p>
+        </div>
+
+        <span class="section-tag">Real-time</span>
+      </div>
+
+      <div class="chart-wrapper">
+        <canvas id="sensorChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Tabel -->
+    <section class="table-container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">SENSOR LOGS</p>
+          <h3>Riwayat Data Sensor</h3>
+          <p>10 pembacaan sensor terbaru</p>
+        </div>
+
+        <span class="section-tag">Latest Data</span>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Perangkat</th>
+              <th>Suhu (°C)</th>
+              <th>Kelembapan (%)</th>
+              <th>Waktu</th>
+            </tr>
+          </thead>
+
+          <tbody id="table-body">
+            <tr>
+              <td colspan="4" class="loading-cell">
+                Memuat data...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2026 Greenhouse Monitoring · IoT Dashboard</p>
+    </footer>
+
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="app.js"></script>
+
+  <script>
+    const themeToggle = document.getElementById("theme-toggle");
+    const themeIcon = document.getElementById("theme-icon");
+    const themeText = document.getElementById("theme-text");
+
+    function updateThemeButton() {
+      const isDark =
+        document.documentElement.getAttribute("data-theme") === "dark";
+
+      themeIcon.textContent = isDark ? "☀️" : "🌙";
+      themeText.textContent = isDark ? "Light Mode" : "Dark Mode";
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const currentTheme =
+        document.documentElement.getAttribute("data-theme");
+
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+      document.documentElement.setAttribute("data-theme", newTheme);
+      localStorage.setItem("greenhouse-theme", newTheme);
+
+      updateThemeButton();
+    });
+
+    updateThemeButton();
+  </script>
 </body>
 </html>
