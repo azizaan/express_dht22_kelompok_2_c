@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Greenhouse IoT Monitoring</title>
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
+    body { padding: 20px; background-color: #f4f6f9; color: #333; }
+    .container { max-width: 1000px; margin: auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+    .online { background-color: #d4edda; color: #155724; }
+    .offline { background-color: #f8d7da; color: #721c24; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .card-normal { border-left: 6px solid #28a745; }
+    .card-hot { border-left: 6px solid #dc3545; }
+    .card-blue { border-left: 6px solid #17a2b8; }
+    .card h3 { font-size: 14px; color: #666; margin-bottom: 8px; }
+    .card .value { font-size: 28px; font-weight: bold; }
+    .card .time { font-size: 11px; color: #888; margin-top: 5px; }
+    .chart-container, .table-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+    th { background-color: #f8f9fa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h2>Greenhouse IoT Monitoring</h2>
+      <span id="device-status" class="status-badge offline">Offline</span>
+    </header>
+
+    <!-- Kartu Nilai Suhu & Kelembapan -->
+    <div class="cards">
+      <div id="suhu-card" class="card card-normal">
+        <h3>SUHU TERKINI</h3>
+        <div class="value"><span id="val-suhu">--</span> °C</div>
+        <div class="time">Update: <span id="time-suhu">--</span></div>
+      </div>
+      <div class="card card-blue">
+        <h3>KELEMBAPAN TERKINI</h3>
+        <div class="value"><span id="val-kelembapan">--</span> %</div>
+        <div class="time">Update: <span id="time-kelembapan">--</span></div>
+      </div>
+    </div>
+
+    <!-- Grafik Garis -->
+    <div class="chart-container">
+      <h3>Grafik Riwayat Suhu & Kelembapan (20 Data Terakhir)</h3>
+      <canvas id="sensorChart" height="100"></canvas>
+    </div>
+
+    <!-- Tabel Riwayat -->
+    <div class="table-container">
+      <h3>Tabel 10 Data Terakhir</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>ID Perangkat</th>
+            <th>Suhu (°C)</th>
+            <th>Kelembapan (%)</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="4" style="text-align: center;">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
