@@ -1,3 +1,18 @@
+function parseWaktu(str) {
+  return new Date(str.replace(' ', 'T') + 'Z');
+}
+
+function formatJam(str) {
+  return parseWaktu(str).toLocaleTimeString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
+}
+
+function formatTanggalJam(str) {
+  return parseWaktu(str).toLocaleString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
+}
+
+let sensorChart = null;
+
+
 // let sensorChart = null;
 
 // // Inisialisasi Grafik Chart.js
@@ -187,6 +202,8 @@ function initChart() {
   });
 }
 
+
+async function fetchLatest() {
 // Memuat riwayat data awal (20 data terakhir)
 async function loadInitialData() {
   try {
@@ -194,6 +211,27 @@ async function loadInitialData() {
     if (!res.ok) return;
     const data = await res.json();
     
+    const formattedTime = formatJam(data.created_at);
+    timeSuhuEl.textContent = formattedTime;
+    timeKelembapanEl.textContent = formattedTime;
+
+
+    if (data.suhu > 35) {
+      suhuCard.className = 'card card-hot';
+    } else {
+      suhuCard.className = 'card card-normal';
+    }
+
+    const lastDataTime = parseWaktu(data.created_at).getTime();
+    const now = new Date().getTime();
+    const diffSeconds = (now - lastDataTime) / 1000;
+
+    if (diffSeconds < 30) {
+      statusBadge.textContent = 'Online';
+      statusBadge.className = 'status-badge online';
+    } else {
+      statusBadge.textContent = 'Offline';
+      statusBadge.className = 'status-badge offline';
     // Urutkan data dari yang lama ke baru untuk grafik
     const sortedData = [...data].reverse();
 
@@ -213,6 +251,20 @@ async function loadInitialData() {
   }
 }
 
+
+async function fetchHistory() {
+  try {
+    const res = await fetch('/api/readings?limit=20');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    
+    const sortedData = [...data].reverse();
+
+    
+    const labels = sortedData.map(item => formatJam(item.created_at));
+    const suhuData = sortedData.map(item => item.suhu);
+    const kelembapanData = sortedData.map(item => item.kelembapan);
 // Update nilai pada Kartu Status Indikator
 function updateUI(data) {
   document.getElementById('val-suhu').textContent = data.suhu;
@@ -232,6 +284,36 @@ function updateUI(data) {
   const lastDataTime = new Date(isoUtc).getTime();
   const diffSeconds = (new Date().getTime() - lastDataTime) / 1000;
 
+    
+    const tbody = document.getElementById('table-body');
+    const latest10 = data.slice(0, 10);
+
+    tbody.innerHTML = latest10.map(item => `
+      <tr>
+        <td>${item.device_id || 'GH-01'}</td>
+        <td>${item.suhu}</td>
+        <td>${item.kelembapan}</td>
+        <td>${formatTanggalJam(item.created_at)}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Gagal mengambil riwayat data:', err);
+  }
+}
+
+
+function updateDashboard() {
+  fetchLatest();
+  fetchHistory();
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  initChart();
+  updateDashboard();
+  
+  
+  setInterval(updateDashboard, 5000);
   const statusBadge = document.getElementById('device-status');
   if (diffSeconds < 30) {
     statusBadge.textContent = 'Online';
