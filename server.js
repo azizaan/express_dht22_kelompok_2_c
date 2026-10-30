@@ -106,6 +106,30 @@ app.get("/api/stats", (req, res) => {
   }
 });
 
+// BONUS: GET /api/readings/export - ekspor seluruh riwayat ke file CSV
+app.get("/api/readings/export", (req, res) => {
+  try {
+    const rows = db
+      .prepare(
+        "SELECT id, device_id, suhu, kelembapan, created_at FROM readings ORDER BY id DESC",
+      )
+      .all();
+
+    // device_id dibungkus tanda kutip agar koma di dalamnya tidak merusak kolom
+    const quote = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+    const header = "id,device_id,suhu,kelembapan,created_at";
+    const lines = rows.map((r) =>
+      [r.id, quote(r.device_id), r.suhu, r.kelembapan, r.created_at].join(","),
+    );
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="readings.csv"');
+    return res.send([header, ...lines].join("\n"));
+  } catch (err) {
+    return res.status(500).json({ error: "Gagal mengekspor data." });
+  }
+});
+
 // Jalankan Server
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);

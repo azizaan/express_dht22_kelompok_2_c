@@ -1,6 +1,18 @@
+function parseWaktu(str) {
+  return new Date(str.replace(' ', 'T') + 'Z');
+}
+
+function formatJam(str) {
+  return parseWaktu(str).toLocaleTimeString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
+}
+
+function formatTanggalJam(str) {
+  return parseWaktu(str).toLocaleString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
+}
+
 let sensorChart = null;
 
-// Inisialisasi Grafik Chart.js
+
 function initChart() {
   const ctx = document.getElementById('sensorChart').getContext('2d');
   sensorChart = new Chart(ctx, {
@@ -36,7 +48,7 @@ function initChart() {
   });
 }
 
-// Fungsi Mengambil Data Terbaru (Status Card & Online Status)
+
 async function fetchLatest() {
   try {
     const res = await fetch('/api/readings/latest');
@@ -53,19 +65,18 @@ async function fetchLatest() {
     suhuEl.textContent = data.suhu;
     kelembapanEl.textContent = data.kelembapan;
     
-    const formattedTime = new Date(data.created_at).toLocaleTimeString();
+    const formattedTime = formatJam(data.created_at);
     timeSuhuEl.textContent = formattedTime;
     timeKelembapanEl.textContent = formattedTime;
 
-    // Perubahan Warna Kartu Suhu: Merah jika > 35°C, Hijau jika normal
+
     if (data.suhu > 35) {
       suhuCard.className = 'card card-hot';
     } else {
       suhuCard.className = 'card card-normal';
     }
 
-    // Cek Status Online: Online jika data terakhir < 30 detik yang lalu
-    const lastDataTime = new Date(data.created_at).getTime();
+    const lastDataTime = parseWaktu(data.created_at).getTime();
     const now = new Date().getTime();
     const diffSeconds = (now - lastDataTime) / 1000;
 
@@ -81,18 +92,18 @@ async function fetchLatest() {
   }
 }
 
-// Fungsi Mengambil Riwayat Data untuk Grafik & Tabel
+
 async function fetchHistory() {
   try {
     const res = await fetch('/api/readings?limit=20');
     if (!res.ok) return;
     const data = await res.json();
 
-    // Data dari API berurut DESC, kita balik (reverse) agar grafik tampil dari kiri ke kanan (lama -> baru)
+    
     const sortedData = [...data].reverse();
 
-    // Update Grafik Chart.js (20 Data Terakhir)
-    const labels = sortedData.map(item => new Date(item.created_at).toLocaleTimeString());
+    
+    const labels = sortedData.map(item => formatJam(item.created_at));
     const suhuData = sortedData.map(item => item.suhu);
     const kelembapanData = sortedData.map(item => item.kelembapan);
 
@@ -101,16 +112,16 @@ async function fetchHistory() {
     sensorChart.data.datasets[1].data = kelembapanData;
     sensorChart.update();
 
-    // Update Tabel Riwayat (10 Data Terakhir)
+    
     const tbody = document.getElementById('table-body');
-    const latest10 = data.slice(0, 10); // Ambil 10 teratas (terbaru)
+    const latest10 = data.slice(0, 10);
 
     tbody.innerHTML = latest10.map(item => `
       <tr>
         <td>${item.device_id || 'GH-01'}</td>
         <td>${item.suhu}</td>
         <td>${item.kelembapan}</td>
-        <td>${new Date(item.created_at).toLocaleString()}</td>
+        <td>${formatTanggalJam(item.created_at)}</td>
       </tr>
     `).join('');
   } catch (err) {
@@ -118,17 +129,17 @@ async function fetchHistory() {
   }
 }
 
-// Fungsi Pemicu Update Otomatis
+
 function updateDashboard() {
   fetchLatest();
   fetchHistory();
 }
 
-// Inisialisasi Saat Halaman Dimuat
+
 document.addEventListener('DOMContentLoaded', () => {
   initChart();
   updateDashboard();
   
-  // Polling data otomatis setiap 5 detik (5000 ms)
+  
   setInterval(updateDashboard, 5000);
 });
