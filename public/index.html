@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Greenhouse IoT Monitoring</title>
   <!-- Chart.js via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Tambahkan CDN Socket.IO ini di dalam tag <head> atau sebelum app.js -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="app.js"></script>
+  
   <link rel="stylesheet" href="style.css">
   <style>
     * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
